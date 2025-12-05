@@ -24,3 +24,11 @@ target/
 bot-config.properties
 *.token
 *.key
+
+# Конфигурационные файлы
+config.properties
+!config.example.properties
+*.properties
+config/
+secret/
+.env
