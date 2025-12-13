@@ -72,8 +72,31 @@ public class KeyboardFactory {
         return keyboardMarkup;
     }
 
-    // Клавиатура для факта (после показа)
-    public static ReplyKeyboardMarkup createFactActionsKeyboard() {
+    // Клавиатура для избранного (ИЗМЕНИЛ private НА public)
+    public static ReplyKeyboardMarkup createFavoritesKeyboard() {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setSelective(true);
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(false);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add("📜 Случайный факт");
+        row1.add("🏷️ Категории");
+
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add("🔙 Назад");
+
+        keyboard.add(row1);
+        keyboard.add(row2);
+
+        keyboardMarkup.setKeyboard(keyboard);
+        return keyboardMarkup;
+    }
+
+    // Клавиатура для действий с фактом
+    public static ReplyKeyboardMarkup createFactActionsKeyboard(boolean isFavorite) {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         keyboardMarkup.setSelective(true);
         keyboardMarkup.setResizeKeyboard(true);
@@ -83,7 +106,7 @@ public class KeyboardFactory {
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add("📜 Ещё факт");
-        row1.add("⭐ В избранное");
+        row1.add(isFavorite ? "❌ Удалить из избранного" : "⭐ В избранное");
 
         KeyboardRow row2 = new KeyboardRow();
         row2.add("🏷️ Категории");

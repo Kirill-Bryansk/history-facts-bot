@@ -1,6 +1,7 @@
 package com.historybot.service;
 
 import com.historybot.database.DatabaseConfig;
+import com.historybot.database.DatabaseUtils;
 import com.historybot.model.Category;
 
 import java.sql.*;
@@ -18,12 +19,7 @@ public class CategoryService {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Category category = new Category();
-                category.setId(rs.getLong("id"));
-                category.setName(rs.getString("name"));
-                category.setDescription(rs.getString("description"));
-                category.setEmoji(rs.getString("emoji"));
-                categories.add(category);
+                categories.add(DatabaseUtils.mapResultSetToCategory(rs));
             }
         } catch (SQLException e) {
             System.err.println("Ошибка получения категорий: " + e.getMessage());

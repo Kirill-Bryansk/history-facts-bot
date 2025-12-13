@@ -1,6 +1,7 @@
 package com.historybot.service;
 
 import com.historybot.database.DatabaseConfig;
+import com.historybot.database.DatabaseUtils;
 import com.historybot.model.Fact;
 
 import java.sql.*;
@@ -17,7 +18,7 @@ public class FactService {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             if (rs.next()) {
-                return mapResultSetToFact(rs);
+                return DatabaseUtils.mapResultSetToFact(rs);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка получения случайного факта: " + e.getMessage());
@@ -26,20 +27,36 @@ public class FactService {
     }
 
     public Fact getRandomFactByCategory(String category) {
-        String sql = "SELECT * FROM facts WHERE category = ? AND verified = 1 ORDER BY RANDOM() LIMIT 1";
+        // Убираем возможные пробелы в начале/конце
+        String cleanCategory = category.trim();
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        // Пробуем несколько вариантов поиска
+        String[] searchPatterns = {
+                cleanCategory,
+                "%" + cleanCategory + "%",
+                cleanCategory + "%",
+                "%" + cleanCategory
+        };
 
-            pstmt.setString(1, category);
-            ResultSet rs = pstmt.executeQuery();
+        for (String pattern : searchPatterns) {
+            String sql = "SELECT * FROM facts WHERE category LIKE ? AND verified = 1 ORDER BY RANDOM() LIMIT 1";
 
-            if (rs.next()) {
-                return mapResultSetToFact(rs);
+            try (Connection conn = DatabaseConfig.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setString(1, pattern);
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    System.out.println("DEBUG: Найден факт по паттерну: '" + pattern + "'");
+                    return DatabaseUtils.mapResultSetToFact(rs);
+                }
+            } catch (SQLException e) {
+                System.err.println("Ошибка поиска факта по категории '" + pattern + "': " + e.getMessage());
             }
-        } catch (SQLException e) {
-            System.err.println("Ошибка получения факта по категории: " + e.getMessage());
         }
+
+        System.out.println("DEBUG: Не найдено фактов для категории: '" + cleanCategory + "'");
         return null;
     }
 
@@ -54,7 +71,7 @@ public class FactService {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                facts.add(mapResultSetToFact(rs));
+                facts.add(DatabaseUtils.mapResultSetToFact(rs));
             }
         } catch (SQLException e) {
             System.err.println("Ошибка получения фактов по году: " + e.getMessage());
@@ -75,17 +92,22 @@ public class FactService {
         }
     }
 
-    private Fact mapResultSetToFact(ResultSet rs) throws SQLException {
-        Fact fact = new Fact();
-        fact.setId(rs.getLong("id"));
-        fact.setContent(rs.getString("content"));
-        fact.setCategory(rs.getString("category"));
-        fact.setYear(rs.getInt("year"));
-        fact.setPeriod(rs.getString("period"));
-        fact.setSource(rs.getString("source"));
-        fact.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-        fact.setViews(rs.getInt("views"));
-        fact.setVerified(rs.getBoolean("verified"));
-        return fact;
+    // Метод для получения факта по ID
+    public Fact getFactById(Long factId) {
+        String sql = "SELECT * FROM facts WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, factId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return DatabaseUtils.mapResultSetToFact(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка получения факта по ID: " + e.getMessage());
+        }
+        return null;
     }
 }
