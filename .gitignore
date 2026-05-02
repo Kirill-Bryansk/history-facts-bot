@@ -26,9 +26,6 @@ bot-config.properties
 *.key
 
 # Конфигурационные файлы
-src/main/resources/config.properties
-!config.example.properties
-*.properties
 config/
 secret/
 .env
